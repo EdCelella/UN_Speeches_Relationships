@@ -2,7 +2,7 @@
 
 The aim of this project is to identify relationships between the topics mentioned in a countries United Nations General Debate speech, and three main factors:
 
-- The economical and social development of a country
+- The economical and social development of a country.
 - The geographical location of a country.
 - The year the speech was given.
 
