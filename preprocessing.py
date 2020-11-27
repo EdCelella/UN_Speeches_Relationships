@@ -38,6 +38,12 @@ def main():
 
 	data, data_2015 = preprocess(debate_file, hdi_file, country_name_file, country_continent_file, stop_words_file)
 
+	print("Running PCA on all data.")
+	pdf = principle_component_analysis(data)
+
+	print("Running PCA on 2015 data")
+	pdf_2015 = principle_component_analysis(data_2015)
+
 	# Tagging information for plots
 	hdi_tag = (data["hdi"], dict(zip(["VH", "HI", "ME", "LO", "NaN"], ['g', 'b', 'r', 'k', 'w'])) )
 	continent_tag = (data["continent"], dict(zip(["AF", "NA", "OC", "AN", "AS", "EU", "SA"],['g', 'b', 'k', 'r', 'c', 'm', 'y'])) )
@@ -47,8 +53,6 @@ def main():
 	continent_tag_2015 = (data_2015["continent"], dict(zip(["AF", "NA", "OC", "AN", "AS", "EU", "SA"],['g', 'b', 'k', 'r', 'c', 'm', 'y'])) )
 
 	code.interact(local=dict(globals(), **locals()))
-
-	
 
 '''
 ----------------------------------------------------------------------------------------------------------------------
@@ -82,6 +86,32 @@ def latent_semantic_analysis(data, tfidf, tfidf_vec):
 	data = pd.concat([data,pd.DataFrame(topics, columns=components)], axis=1).drop(["index"],axis=1)
 
 	return data, lsa
+
+def principle_component_analysis(data):
+	
+	pca = PCA(0.99)
+
+	topics = data[data.columns[5:]]
+
+	pca_comp = pca.fit(topics)
+	print(pca.explained_variance_ratio_)
+
+	components = pca.n_components_
+	component_labels = ["PC" + str(i+1) for i in range(0, components)]
+
+	pca_matrix = pca.fit_transform(topics)
+
+	pdf = pd.DataFrame(data = pca_matrix, columns = component_labels)
+
+	data = (data[["hdi", "continent","decade"]].reset_index()).drop(["index"],axis=1)
+	pdf = pdf.reset_index().drop(["index"],axis=1)
+
+	pdf = pd.concat([data, pdf], axis=1)
+
+	return pdf
+
+	
+
 
 '''
 ----------------------------------------------------------------------------------------------------------------------
@@ -164,6 +194,8 @@ def preprocess(debate_file, hdi_file, country_name_file, country_continent_file,
 		data = read_csv(lsa_file).drop([""],axis=1)
 		lsa = pickle.load(open(lsa_obj, "rb"))
 
+	print(lsa.explained_variance_ratio_)
+
 	# Checks if 2015 LSA data exists.
 	if not os.path.isfile(lsa_2015_file) or not os.path.isfile(lsa_2015_obj):
 		print("Running LSA on 2015 data.")
@@ -179,6 +211,8 @@ def preprocess(debate_file, hdi_file, country_name_file, country_continent_file,
 		print("Reading 2015 LSA files.")
 		data_2015 = read_csv(lsa_2015_file).drop([""],axis=1)
 		lsa_2015 = pickle.load(open(lsa_2015_obj, "rb"))
+
+	print(lsa_2015.explained_variance_ratio_)
 
 	return data, data_2015
 
